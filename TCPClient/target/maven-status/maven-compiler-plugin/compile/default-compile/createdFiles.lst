@@ -1,4 +1,7 @@
+org\example\client\ClientModel$Listener.class
+org\example\client\ClientController.class
+org\example\client\ClientConfig.class
+org\example\client\ClientController$ServerWords.class
 org\example\client\TCPClient.class
 org\example\client\TCPClientApp.class
-org\example\client\ClientController.class
 org\example\client\ClientModel.class

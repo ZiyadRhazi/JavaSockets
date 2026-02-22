@@ -1,32 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx"
+<VBox spacing="10" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="org.example.client.ClientController"
-      spacing="10" padding="10">
+      style="-fx-padding: 12;">
 
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Label text="Host:"/>
-        <TextField fx:id="hostField" prefWidth="150"/>
-        <Label text="Port:"/>
-        <TextField fx:id="portField" prefWidth="100"/>
-        <Button fx:id="connectButton" text="Connect" onAction="#handleConnect"/>
-        <Button fx:id="disconnectButton" text="Disconnect" onAction="#handleDisconnect"/>
+    <Label text="TCP Client"/>
+
+    <TextArea fx:id="chatLog" prefHeight="360" wrapText="true" editable="false"/>
+
+    <HBox spacing="8">
+        <TextField fx:id="messageField" HBox.hgrow="ALWAYS" promptText="Type message or command..."/>
+        <Button fx:id="sendButton" text="Send"/>
     </HBox>
-
-    <Label text="Chat:"/>
-    <TextArea fx:id="chatArea" editable="false" VBox.vgrow="ALWAYS" prefHeight="150"/>
-
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <TextField fx:id="messageField" HBox.hgrow="ALWAYS" onAction="#handleSend"/>
-        <Button fx:id="sendButton" text="Send" onAction="#handleSend"/>
-    </HBox>
-
-    <Label text="Connection Log:"/>
-    <TextArea fx:id="logArea" editable="false" prefHeight="100"/>
 
 </VBox>

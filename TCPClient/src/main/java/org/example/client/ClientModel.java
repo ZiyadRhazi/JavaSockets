@@ -1,41 +1,85 @@
 package org.example.client;
 
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 public class ClientModel {
-    private final StringProperty messageProperty;
-    private final StringProperty logProperty;
-    private StringBuilder messageBuilder;
-    private StringBuilder logBuilder;
 
-    public ClientModel() {
-        this.messageProperty = new SimpleStringProperty("");
-        this.logProperty = new SimpleStringProperty("");
-        this.messageBuilder = new StringBuilder();
-        this.logBuilder = new StringBuilder();
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+
+    private Thread receiverThread;
+    private volatile boolean running;
+
+    private Listener listener;
+
+    public interface Listener {
+        void onServerLine(String line);
+        void onStatus(String statusLine);
+        void onDisconnected(String reason);
     }
 
-    public void addMessage(String message) {
-        Platform.runLater(() -> {
-            messageBuilder.append(message).append("\n");
-            messageProperty.set(messageBuilder.toString());
-        });
+    public void setListener(Listener listener) {
+        this.listener = listener;
     }
 
-    public void addLog(String log) {
-        Platform.runLater(() -> {
-            logBuilder.append(log).append("\n");
-            logProperty.set(logBuilder.toString());
-        });
+    public void connect(String host, int port, String usernameToSend) throws IOException {
+        socket = new Socket(host, port);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
+
+        running = true;
+
+        if (listener != null) {
+            listener.onStatus("Connected to " + host + ":" + port);
+        }
+
+        // Start receiver loop
+        receiverThread = new Thread(this::receiveLoop, "client-receiver");
+        receiverThread.setDaemon(true);
+        receiverThread.start();
+
+        // Server asks for username first; we respond immediately (even if blank)
+        sendRaw(usernameToSend == null ? "" : usernameToSend);
     }
 
-    public StringProperty messageProperty() {
-        return messageProperty;
+    private void receiveLoop() {
+        try {
+            String line;
+            while (running && (line = in.readLine()) != null) {
+                if (listener != null) listener.onServerLine(line);
+            }
+            if (listener != null) listener.onDisconnected("Server closed the connection.");
+        } catch (IOException e) {
+            if (listener != null) listener.onDisconnected("Disconnected: " + e.getMessage());
+        } finally {
+            running = false;
+            closeSilently();
+        }
     }
 
-    public StringProperty logProperty() {
-        return logProperty;
+    public void sendMessage(String text) {
+        // Normal chat messages and commands are both just "send a line"
+        sendRaw(text);
+    }
+
+    private void sendRaw(String line) {
+        if (out != null) out.println(line);
+    }
+
+    public void disconnect() {
+        running = false;
+        closeSilently();
+    }
+
+    private void closeSilently() {
+        try {
+            if (socket != null) socket.close();
+        } catch (IOException ignored) {
+        }
     }
 }

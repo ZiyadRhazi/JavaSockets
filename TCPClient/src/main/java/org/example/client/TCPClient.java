@@ -1,65 +1,47 @@
 package org.example.client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class TCPClient {
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
-    private ClientModel model;
-    private boolean isConnected;
 
-    public TCPClient(ClientModel model) {
-        this.model = model;
+    public static void main(String[] args) {
+        // 1) Load defaults from client-config.properties (optional fallback)
+        loadDefaultsFromProperties();
+
+        // 2) Required CLI format: java TCPClient <ServerIPAddress> <PortNumber>
+        // Args must override properties.
+        if (args.length >= 2) {
+            ClientConfig.host = args[0].trim();
+            try {
+                ClientConfig.port = Integer.parseInt(args[1].trim());
+            } catch (NumberFormatException ignored) {
+                // keep default port
+            }
+        }
+
+        // 3) Launch JavaFX app
+        TCPClientApp.main(args);
     }
 
-    public void connect(String host, int port) throws IOException {
-        socket = new Socket(host, port);
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
-        isConnected = true;
-        
-        model.addLog("Connected to server at " + host + ":" + port);
+    private static void loadDefaultsFromProperties() {
+        try (InputStream is = TCPClient.class.getResourceAsStream("/client-config.properties")) {
+            if (is == null) return;
 
-        // Start listening for incoming messages
-        new Thread(() -> {
-            try {
-                String message;
-                while (isConnected && (message = in.readLine()) != null) {
-                    model.addMessage("Server: " + message);
-                }
-            } catch (IOException e) {
-                if (isConnected) {
-                    model.addLog("Error reading from server: " + e.getMessage());
+            Properties p = new Properties();
+            p.load(is);
+
+            String host = p.getProperty("server.host");
+            String portStr = p.getProperty("server.port");
+
+            if (host != null && !host.isBlank()) ClientConfig.host = host.trim();
+            if (portStr != null && !portStr.isBlank()) {
+                try {
+                    ClientConfig.port = Integer.parseInt(portStr.trim());
+                } catch (NumberFormatException ignored) {
                 }
             }
-        }).start();
-    }
-
-    public void sendMessage(String message) {
-        if (out != null && isConnected) {
-            out.println(message);
-            model.addMessage("You: " + message);
+        } catch (Exception ignored) {
         }
-    }
-
-    public void disconnect() {
-        isConnected = false;
-        try {
-            if (in != null) in.close();
-            if (out != null) out.close();
-            if (socket != null && !socket.isClosed()) socket.close();
-            model.addLog("Disconnected from server");
-        } catch (IOException e) {
-            model.addLog("Error disconnecting: " + e.getMessage());
-        }
-    }
-
-    public boolean isConnected() {
-        return isConnected && socket != null && !socket.isClosed();
     }
 }
