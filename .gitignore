@@ -1,0 +1,12 @@
+﻿# Maven
+target/
+**/target/
+
+# IntelliJ
+.idea/
+**/.idea/
+*.iml
+
+# Windows
+Thumbs.db
+Desktop.ini
