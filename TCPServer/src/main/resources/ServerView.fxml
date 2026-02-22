@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.server.ServerController"
+      style="-fx-padding: 12;">
+
+    <HBox spacing="8">
+        <Label text="Port:"/>
+        <TextField fx:id="portField" prefWidth="120"/>
+        <Button fx:id="startButton" text="Start" onAction="#onStart"/>
+        <Button fx:id="stopButton" text="Stop" onAction="#onStop"/>
+    </HBox>
+
+    <SplitPane dividerPositions="0.3">
+        <VBox spacing="6">
+            <Label text="Connected Users"/>
+            <ListView fx:id="usersListView" prefHeight="400"/>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="Server Log / Chat"/>
+            <TextArea fx:id="chatLog" prefHeight="400" wrapText="true"/>
+        </VBox>
+    </SplitPane>
+
+</VBox>
